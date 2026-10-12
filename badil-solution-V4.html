@@ -1,0 +1,1890 @@
+<!DOCTYPE html>
+<!--
+===============================================================================
+COPYRIGHT & INTELLECTUAL PROPERTY NOTICE
+
+Project: Badil — Solution Design
+Copyright owner: Ali Ahmed Abdullah Sakr
+Copyright © 2026 Ali Ahmed Abdullah Sakr. All rights reserved.
+
+The original project concept, solution design, original documentation, diagrams,
+and other original materials in this file are claimed as the intellectual
+property of Ali Ahmed Abdullah Sakr, to the extent protected by applicable law.
+
+This notice expresses an ownership claim; it does not technically prevent
+editing, copying, or redistribution of the file.
+===============================================================================
+-->
+
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Badil – Solution Design</title>
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@10.9.3/dist/mermaid.min.js"></script>
+  <style>
+    :root {
+      --bg: #0f1117; --surface: #1a1d27; --surface2: #22263a;
+      --accent: #6c63ff; --accent2: #00d4aa; --accent3: #ff6b6b;
+      --text: #e8eaf0; --text-muted: #8b92a8; --border: #2d3250;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { background: var(--bg); color: var(--text); font-family: 'Segoe UI', system-ui, sans-serif; min-height: 100vh; }
+
+    header {
+      background: linear-gradient(135deg, #1a1d27 0%, #22263a 100%);
+      border-bottom: 1px solid var(--border);
+      padding: 28px 40px 24px; display: flex; align-items: center; gap: 20px;
+    }
+    .header-icon {
+      width: 52px; height: 52px; background: linear-gradient(135deg, var(--accent), var(--accent2));
+      border-radius: 14px; display: flex; align-items: center; justify-content: center; font-size: 24px; flex-shrink: 0;
+    }
+    header h1 { font-size: 1.65rem; font-weight: 700; color: #fff; }
+    header p  { font-size: 0.85rem; color: var(--text-muted); margin-top: 3px; }
+
+    .legend-bar { display: flex; flex-wrap: wrap; gap: 12px 20px; padding: 14px 40px; background: var(--surface); border-bottom: 1px solid var(--border); }
+    .legend-item { display: flex; align-items: center; gap: 7px; font-size: 0.78rem; color: var(--text-muted); }
+    .legend-dot { width: 12px; height: 12px; border-radius: 3px; flex-shrink: 0; }
+
+    .tabs { display: flex; gap: 4px; padding: 16px 40px 0; background: var(--bg); border-bottom: 1px solid var(--border); overflow-x: auto; }
+    .tab {
+      padding: 9px 20px; border-radius: 8px 8px 0 0; cursor: pointer; font: inherit; font-size: 0.85rem; font-weight: 500;
+      border: 1px solid transparent; border-bottom: none; transition: color .2s; color: var(--text-muted); background: transparent; white-space: nowrap;
+    }
+    .tab.active { background: var(--surface); border-color: var(--border); color: var(--text); }
+    .tab:hover:not(.active) { color: var(--text); }
+    .tab:focus-visible, button:focus-visible { outline: 2px solid var(--accent2); outline-offset: 2px; }
+
+    .panel { display: none; padding: 32px 40px; }
+    .panel.active { display: block; }
+
+    .dg { margin-bottom: 32px; }
+    .dg:last-child { margin-bottom: 0; }
+    .dg-head { display: flex; justify-content: space-between; align-items: flex-end; gap: 16px; flex-wrap: wrap; margin-bottom: 12px; }
+    .dg-title { font-size: 1.1rem; font-weight: 600; color: #fff; }
+    .dg-desc { font-size: 0.82rem; color: var(--text-muted); margin-top: 3px; max-width: 70ch; }
+    .dg-bar { display: flex; gap: 6px; }
+    .dg-bar button {
+      font: inherit; font-size: 0.78rem; color: var(--text); background: var(--surface2);
+      border: 1px solid var(--border); border-radius: 8px; padding: 6px 12px; cursor: pointer; transition: border-color .2s;
+    }
+    .dg-bar button:hover { border-color: var(--accent); }
+    .diagram-wrap { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 24px; overflow: auto; }
+    .dg-canvas svg { display: block; margin: 0 auto; height: auto; }
+    .dg-loading, .dg-error { font-size: 0.85rem; color: var(--text-muted); }
+    .dg-error { color: var(--accent3); white-space: pre-wrap; }
+
+    .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 18px; }
+    .card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; }
+    .card-header { display: flex; align-items: center; gap: 10px; padding: 14px 18px; border-bottom: 1px solid var(--border); }
+    .card-badge { font-size: 0.68rem; font-weight: 700; letter-spacing: .05em; padding: 2px 8px; border-radius: 20px; text-transform: uppercase; }
+    .badge-abstract  { background: #3d2970; color: #c4a5ff; }
+    .badge-entity    { background: #1a3a55; color: #66c6ff; }
+    .badge-vo        { background: #1e3b2e; color: #52e5a0; }
+    .badge-enum      { background: #3a2a14; color: #ffc266; }
+    .badge-interface { background: #3a1a2a; color: #ff94b0; }
+    .card-title { font-size: 1rem; font-weight: 600; color: #fff; }
+    .card-desc  { font-size: 0.78rem; color: var(--text-muted); padding: 10px 18px 6px; }
+    .card-body  { padding: 6px 18px 16px; }
+    .card-body.pad { padding: 14px 18px 18px; }
+    .section-label { font-size: 0.68rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--text-muted); margin: 10px 0 5px; }
+    .attr-list, .method-list { list-style: none; }
+    .attr-list li, .method-list li { font-size: 0.79rem; color: var(--text); padding: 3px 0; border-bottom: 1px solid #22263a; display: flex; align-items: baseline; gap: 6px; }
+    .attr-list li:last-child, .method-list li:last-child { border: none; }
+    .token-type { color: var(--accent2); font-family: monospace; font-size: .76rem; }
+    .token-name { color: #c8d0e8; font-family: monospace; }
+    .enum-vals { display: flex; flex-wrap: wrap; gap: 6px; padding: 10px 18px 14px; }
+    .pill { font-size: 0.74rem; padding: 3px 10px; border-radius: 20px; background: var(--surface2); color: var(--text-muted); border: 1px solid var(--border); }
+    .plain-list { list-style: none; }
+    .plain-list li { font-size: 0.84rem; line-height: 1.5; padding: 6px 0; border-bottom: 1px solid var(--surface2); }
+    .plain-list li:last-child { border: none; }
+    ol.plain-list { list-style: decimal; padding-left: 20px; }
+    .plain-list strong { color: #fff; font-weight: 600; }
+
+    .rel-table { width: 100%; border-collapse: collapse; font-size: 0.82rem; }
+    .rel-table th { text-align: left; padding: 8px 14px; background: var(--surface2); color: var(--text-muted); font-size: 0.74rem; text-transform: uppercase; letter-spacing: .06em; }
+    .rel-table td { padding: 9px 14px; border-bottom: 1px solid var(--border); color: var(--text); }
+    .rel-table tr:last-child td { border: none; }
+    .rel-table tr:hover td { background: var(--surface2); }
+    .cardinality { font-family: monospace; font-size: .82rem; color: var(--accent2); font-weight: 700; }
+    .rel-type { font-size: .72rem; }
+    .rt-assoc { color: #66c6ff; } .rt-compose { color: #52e5a0; } .rt-dep { color: #ffa07a; }
+
+    @media (max-width: 700px) {
+      header, .legend-bar, .tabs, .panel { padding-left: 16px; padding-right: 16px; }
+      header h1 { font-size: 1.25rem; }
+      .diagram-wrap { padding: 12px; }
+    }
+
+    .copyright-notice {
+      margin: 0; padding: 18px 40px; border-top: 1px solid var(--border);
+      background: var(--surface); color: var(--text-muted); font-size: 0.78rem;
+      line-height: 1.6; text-align: center;
+    }
+    .copyright-notice strong { color: var(--text); }
+    .copyright-notice a { color: var(--accent2); }
+    @media (max-width: 700px) { .copyright-notice { padding: 16px; } }
+
+    @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="header-icon">♻️</div>
+  <div>
+    <h1>Badil — Solution Design</h1>
+    <p>Industrial symbiosis marketplace · Clean Architecture · .NET 8 + React</p>
+  </div>
+</header>
+
+<div class="legend-bar">
+  <div class="legend-item"><div class="legend-dot" style="background:#059669"></div> MVP use case</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#d97706"></div> Post-MVP use case</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#3498db"></div> Entity</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#f39c12"></div> Enumeration</div>
+</div>
+
+<div class="tabs" role="tablist"><button type="button" class="tab active" role="tab" data-tab="start" aria-selected="true">Start here</button><button type="button" class="tab" role="tab" data-tab="overview" aria-selected="false">Overview</button><button type="button" class="tab" role="tab" data-tab="rules" aria-selected="false">Rules</button><button type="button" class="tab" role="tab" data-tab="usecases" aria-selected="false">Use cases</button><button type="button" class="tab" role="tab" data-tab="arch" aria-selected="false">Architecture</button><button type="button" class="tab" role="tab" data-tab="data" aria-selected="false">Data model</button><button type="button" class="tab" role="tab" data-tab="domain" aria-selected="false">Domain model</button><button type="button" class="tab" role="tab" data-tab="life" aria-selected="false">Lifecycles</button><button type="button" class="tab" role="tab" data-tab="flows" aria-selected="false">Sequences</button><button type="button" class="tab" role="tab" data-tab="admin" aria-selected="false">Admin and settings</button><button type="button" class="tab" role="tab" data-tab="api" aria-selected="false">API and DTOs</button><button type="button" class="tab" role="tab" data-tab="catalog" aria-selected="false">Class catalog</button><button type="button" class="tab" role="tab" data-tab="rels" aria-selected="false">Relationships</button></div>
+
+<div class="panel active" id="tab-start" role="tabpanel"><div class="grid"><div class="card"><div class="card-header"><span class="card-badge badge-abstract">In order</span><span class="card-title">How to read this page</span></div><div class="card-body pad"><ol class="plain-list"><li><strong>Overview</strong>: what Badil is, what is in the MVP, what is still undecided.</li><li><strong>Rules</strong>: the decisions behind prices, units, chat, transport and the audit log.</li><li><strong>Use cases</strong>: who can do what. Green is MVP, amber comes later.</li><li><strong>Architecture</strong>: how the code is split into layers.</li><li><strong>Data model</strong> and <strong>Domain model</strong>: what information the system stores, as tables and as C# classes.</li><li><strong>Lifecycles</strong> and <strong>Sequences</strong>: how things change over time, step by step.</li><li><strong>API and DTOs</strong> and <strong>Admin and settings</strong>: what the frontend and backend send each other.</li></ol></div></div><div class="card"><div class="card-header"><span class="card-badge badge-entity">Lookup</span><span class="card-title">Where to look when you are stuck</span></div><div class="card-body pad"><ul class="plain-list"><li><strong>Why does this exist?</strong> Use cases.</li><li><strong>What data is there?</strong> Data model, then Domain model.</li><li><strong>What happens, and in what order?</strong> Lifecycles and Sequences.</li><li><strong>What does the frontend send?</strong> API and DTOs.</li><li><strong>What is the field or method called?</strong> Class catalog.</li></ul></div></div><div class="card"><div class="card-header"><span class="card-badge badge-vo">Build</span><span class="card-title">Suggested MVP build order</span></div><div class="card-body pad"><ol class="plain-list"><li>Solution with four projects, SQL Server, first migration, audit interceptor, seeded admin and categories</li><li>Register, login and JWT; factory profile</li><li>Offers and requests with images</li><li>Keyword search and filters</li><li>Simple chat</li><li>Basic user dashboard</li></ol></div></div><div class="card"><div class="card-header"><span class="card-badge badge-enum">Glossary</span><span class="card-title">Words you will see</span></div><div class="card-body pad"><ul class="plain-list"><li><strong>Entity</strong>: a thing the system stores, such as Offer or Deal. One table each.</li><li><strong>Enumeration</strong>: a fixed list of allowed values, such as Available, Reserved, Sold.</li><li><strong>Command</strong>: a request to change something. <strong>Query</strong>: a request to read something.</li><li><strong>DTO</strong>: the shape of data sent over the API. Entities are never sent directly.</li><li><strong>Controller</strong>: the API entry point that receives a command or query and returns a DTO.</li><li><strong>Layer</strong>: Domain (rules), Application (use cases), Infrastructure (database, email, files), API (controllers).</li><li><strong>Escrow</strong>: money the platform holds until the buyer accepts the delivery.</li></ul></div></div></div></div><div class="panel" id="tab-overview" role="tabpanel"><div class="grid"><div class="card"><div class="card-header"><span class="card-badge badge-abstract">2 roles</span><span class="card-title">Roles</span></div><div class="card-body pad"><ul class="plain-list"><li><strong>User</strong>: a verified factory. It can offer by-products, request raw materials, or do both. In each deal it acts as the seller or the buyer.</li><li><strong>Admin</strong>: verifies users, monitors deals, mediates disputes and generates compliance reports.</li></ul></div></div><div class="card"><div class="card-header"><span class="card-badge badge-vo">MVP</span><span class="card-title">MVP scope</span></div><div class="card-body pad"><ul class="plain-list"><li>Authentication and factory profiles</li><li>Create, edit and close offers and requests</li><li>Keyword search and basic filters</li><li>Contact button and simple chat</li><li>Basic dashboard for users</li><li>Backend on Clean Architecture and SQL Server</li></ul></div></div><div class="card"><div class="card-header"><span class="card-badge badge-enum">Later</span><span class="card-title">Post-MVP scope</span></div><div class="card-body pad"><ul class="plain-list"><li>Interactive maps with radius search</li><li>Verified badges and document verification</li><li>Notifications system</li><li>Reverse logistics integration</li><li>Compliance and environmental impact reports</li></ul></div></div><div class="card"><div class="card-header"><span class="card-badge badge-interface">Decide</span><span class="card-title">Not placed in the SRS yet</span></div><div class="card-body pad"><ul class="plain-list"><li>Escrow, sample requests and dispute handling are described in section 3 but sit in neither the MVP list nor the Post-MVP list. These diagrams treat them as Post-MVP.</li><li>The admin dashboard, settings, audit log, per-unit pricing and listing-based chat are in these diagrams but not yet in the SRS document.</li></ul></div></div><div class="card"><div class="card-header"><span class="card-badge badge-entity">Stack</span><span class="card-title">Technology</span></div><div class="card-body pad"><ul class="plain-list"><li>React + Vite, Leaflet.js and OpenStreetMap</li><li>.NET 8 Web API with Domain, Application, Infrastructure and API layers</li><li>EF Core and NetTopologySuite on SQL Server (spatial)</li><li>JWT authentication with User and Admin policies</li><li>SignalR for real-time alerts and chat (planned)</li><li>Escrow behind an interface: simulated ledger first, real provider later</li></ul></div></div><div class="card"><div class="card-header"><span class="card-badge badge-vo">9 tables</span><span class="card-title">Proposed MVP tables</span></div><div class="card-body pad"><ul class="plain-list"><li>USER, FACTORY_PROFILE, MATERIAL_CATEGORY</li><li>OFFER, OFFER_IMAGE, REQUEST</li><li>CONVERSATION, MESSAGE, AUDIT_LOG</li><li>Everything else in the data model waits for Post-MVP.</li></ul></div></div><div class="card"><div class="card-header"><span class="card-badge badge-interface">To settle</span><span class="card-title">Open decisions</span></div><div class="card-body pad"><ul class="plain-list"><li>Open registration or admin approval before a factory can post</li><li>Chat transport: REST with polling first, or SignalR from the start</li><li>Where uploaded images are stored</li><li>How the dashboard computes cost savings</li><li>Can a deal take part of an offer’s quantity, or only all of it?</li><li>What happens when a deposit or an inspection period runs out</li><li>What happens to a suspended user’s offers and open deals</li><li>Password reset, email confirmation and refresh tokens are not modelled yet</li><li>Impact for liters and pieces needs a weight conversion; for now only mass units count</li></ul></div></div></div></div><div class="panel" id="tab-rules" role="tabpanel"><div class="grid"><div class="card"><div class="card-header"><span class="card-badge badge-vo">Rule</span><span class="card-title">Prices and units</span></div><div class="card-body pad"><ul class="plain-list"><li>Every offer has a quantity, one unit (Kg, Ton, Liter, CubicMeter or Piece) and an asking price per one unit, in EGP. Example: 500 Ton at 1,200 EGP per Ton.</li><li>A request has a quantity and a unit but no price.</li><li>The asking price is a starting point. Buyer and seller discuss it in the chat.</li><li>The buyer proposes a deal with an agreed unit price, prefilled from the asking price. When the seller accepts, quantity and unit price are locked, even if the seller edits the offer later.</li><li>Deal total = quantity × agreed unit price. The escrow holds the total.</li></ul></div></div><div class="card"><div class="card-header"><span class="card-badge badge-entity">Rule</span><span class="card-title">Units in search and matching</span></div><div class="card-body pad"><ul class="plain-list"><li>Quantities are compared after converting within the same kind: Kg and Ton are mass, Liter and CubicMeter are volume, Piece is a count.</li><li>Different kinds never match. A request in Liters cannot match an offer in Kg.</li></ul></div></div><div class="card"><div class="card-header"><span class="card-badge badge-enum">Rule</span><span class="card-title">Transport</span></div><div class="card-body pad"><ul class="plain-list"><li>The deal shows a distance-based transport estimate.</li><li>It is not part of the price and not held in escrow, because the platform does not handle logistics yet.</li><li>When logistics is added, it becomes an extra line on the deal.</li></ul></div></div><div class="card"><div class="card-header"><span class="card-badge badge-abstract">Rule</span><span class="card-title">Chat</span></div><div class="card-body pad"><ul class="plain-list"><li>Every conversation is about one listing: an offer or a request.</li><li>Any factory can open a conversation on another factory’s listing, never on its own.</li><li>One conversation per listing and per interested factory. There are no free-form direct messages.</li></ul></div></div><div class="card"><div class="card-header"><span class="card-badge badge-interface">Rule</span><span class="card-title">Audit log</span></div><div class="card-body pad"><ul class="plain-list"><li>Written from the first release by one central mechanism, not by hand in each handler.</li><li>Covers every create, update, delete and status change by users and admins, plus sign-ins and password changes.</li><li>Not logged: reads, and chat message text (messages have their own table).</li><li>Append-only. The actor is empty only for system jobs and failed sign-ins. Details never contain passwords or tokens.</li></ul></div></div><div class="card"><div class="card-header"><span class="card-badge badge-abstract">Rule</span><span class="card-title">Identity</span></div><div class="card-body pad"><ul class="plain-list"><li>One User account per factory. Business actions (offers, requests, deals, chat) belong to the factory profile; account data and notifications belong to the user.</li><li>Buyer and Seller are roles inside a single deal, not account types.</li></ul></div></div></div></div><div class="panel" id="tab-usecases" role="tabpanel">
+    <section class="dg" data-src="src-01" data-key="01">
+      <div class="dg-head">
+        <div>
+          <h2 class="dg-title">Use cases</h2>
+          <p class="dg-desc">Green is MVP, amber is Post-MVP. Admin signs in through the same login as User.</p>
+        </div>
+        <div class="dg-bar">
+          <button type="button" data-act="zoom-out" aria-label="Zoom out">&minus;</button>
+          <button type="button" data-act="zoom-in" aria-label="Zoom in">+</button>
+          <button type="button" data-act="fit">Fit</button>
+          <button type="button" data-act="copy">Copy Mermaid code</button>
+        </div>
+      </div>
+      <div class="diagram-wrap"><div class="dg-canvas"><p class="dg-loading">Rendering diagram&hellip;</p></div></div>
+      <script type="text/plain" id="src-01">flowchart LR
+    U(["User<br/>(Factory: offers and/or demands)"])
+    A(["Admin"])
+
+    subgraph ACC["Account and Profile"]
+        UC1(["Register / Login"])
+        UC2(["Manage factory profile<br/>and location pin"])
+        UC21(["Change password and<br/>alert preferences"])
+    end
+
+    subgraph MKT["Marketplace"]
+        UC3(["Create / edit / close Offer"])
+        UC4(["Create / edit / close Request"])
+        UC5(["Search and filter listings"])
+        UC6(["Chat about an offer<br/>or a request"])
+    end
+
+    subgraph MAT["Matching and Notifications"]
+        UC7(["Save search"])
+        UC8(["Receive match notifications"])
+        UC9(["Radius search on map"])
+    end
+
+    subgraph TRX["Deals"]
+        UC10(["Request sample"])
+        UC11(["Propose and accept deal"])
+        UC12(["Deposit to escrow"])
+        UC13(["Confirm shipment / delivery"])
+        UC14(["Inspect and accept or raise dispute"])
+    end
+
+    subgraph RPT["Dashboard and Reports"]
+        UC15(["View dashboard"])
+        UC16(["View impact and compliance reports (PDF)"])
+    end
+
+    subgraph ADM["Administration"]
+        UC17(["Verify users and documents"])
+        UC18(["Monitor deals"])
+        UC19(["Mediate and resolve disputes"])
+        UC20(["Generate platform compliance reports"])
+        UC22(["View admin dashboard"])
+        UC23(["Manage users<br/>(suspend / reactivate)"])
+        UC24(["Manage material categories"])
+        UC25(["Configure platform settings"])
+        UC26(["Browse audit log"])
+    end
+
+    U --- UC1
+    U --- UC2
+    U --- UC3
+    U --- UC4
+    U --- UC5
+    U --- UC6
+    U --- UC7
+    U --- UC8
+    U --- UC9
+    U --- UC10
+    U --- UC11
+    U --- UC12
+    U --- UC13
+    U --- UC14
+    U --- UC15
+    U --- UC16
+    U --- UC21
+
+    A --- UC1
+    A --- UC17
+    A --- UC18
+    A --- UC19
+    A --- UC20
+    A --- UC21
+    A --- UC22
+    A --- UC23
+    A --- UC24
+    A --- UC25
+    A --- UC26
+
+    classDef mvp fill:#d1fae5,stroke:#059669,color:#064e3b
+    classDef post fill:#fef3c7,stroke:#d97706,color:#78350f
+    class UC1,UC2,UC3,UC4,UC5,UC6,UC15 mvp
+    class UC7,UC8,UC9,UC10,UC11,UC12,UC13,UC14,UC16,UC17,UC18,UC19,UC20,UC21,UC22,UC23,UC24,UC25,UC26 post</script>
+    </section></div><div class="panel" id="tab-arch" role="tabpanel">
+    <section class="dg" data-src="src-02" data-key="02">
+      <div class="dg-head">
+        <div>
+          <h2 class="dg-title">System architecture</h2>
+          <p class="dg-desc">React client, .NET 8 backend in four layers, SQL Server and external services.</p>
+        </div>
+        <div class="dg-bar">
+          <button type="button" data-act="zoom-out" aria-label="Zoom out">&minus;</button>
+          <button type="button" data-act="zoom-in" aria-label="Zoom in">+</button>
+          <button type="button" data-act="fit">Fit</button>
+          <button type="button" data-act="copy">Copy Mermaid code</button>
+        </div>
+      </div>
+      <div class="diagram-wrap"><div class="dg-canvas"><p class="dg-loading">Rendering diagram&hellip;</p></div></div>
+      <script type="text/plain" id="src-02">flowchart TB
+    subgraph CLIENT["Client - Browser"]
+        SPA["React + Vite SPA<br/>Dashboards, Listings, Chat, Notifications"]
+        MAP["Leaflet.js map<br/>pin input, radius search"]
+    end
+
+    subgraph BACKEND[".NET 8 Backend - Clean Architecture"]
+        direction TB
+
+        subgraph APILAYER["API Layer"]
+            REST["REST Controllers<br/>JWT auth, role policies User / Admin<br/>bind Commands, return DTOs"]
+            HUB["SignalR Hub<br/>real-time alerts and chat"]
+        end
+
+        subgraph APPLAYER["Application Layer - use cases"]
+            M1["Auth and Profiles"]
+            M2["Listings<br/>Offers and Requests"]
+            M3["Search and Matching<br/>keyword + filters + spatial"]
+            M4["Deals<br/>Escrow, Samples, Disputes"]
+            M5["Chat"]
+            M6["Notifications"]
+            M7["Reporting<br/>Impact and Compliance"]
+            M8["Admin<br/>dashboard, users, categories"]
+            M9["Settings and Audit<br/>user preferences, platform settings"]
+            CONTRACT["Commands, Queries, DTOs<br/>FluentValidation + mappers<br/>entities never leave this layer"]
+        end
+
+        subgraph DOMLAYER["Domain Layer"]
+            DOM["Entities, enums, business rules<br/>no external dependencies"]
+        end
+
+        subgraph INFRALAYER["Infrastructure Layer"]
+            EF["EF Core + NetTopologySuite"]
+            ESC["IEscrowGateway<br/>simulated ledger first, real provider later"]
+            MAIL["Email sender (SMTP)"]
+            FILES["File storage<br/>images, verification docs"]
+            PDF["PDF generator"]
+            AUDIT["Audit interceptor<br/>writes an AuditLog row with every change"]
+            JOBS["Background jobs<br/>daily batch, saved-search matching"]
+        end
+    end
+
+    subgraph DATA["Data"]
+        DB[("SQL Server<br/>relational + spatial geography")]
+        BLOB[("File store")]
+    end
+
+    subgraph EXT["External"]
+        OSM["OpenStreetMap tiles"]
+        SMTP["Email provider"]
+    end
+
+    SPA -->|"HTTPS / JSON"| REST
+    SPA <-->|"WebSocket"| HUB
+    MAP -->|"tiles"| OSM
+    SPA --- MAP
+
+    REST -->|"Commands / Queries"| CONTRACT
+    CONTRACT --> M1
+    CONTRACT --> M2
+    CONTRACT --> M3
+    CONTRACT --> M4
+    CONTRACT --> M5
+    CONTRACT --> M6
+    CONTRACT --> M7
+    CONTRACT --> M8
+    CONTRACT --> M9
+    HUB --> M5
+    HUB --> M6
+
+    APPLAYER --> DOMLAYER
+    APPLAYER -.->|"interfaces"| INFRALAYER
+    INFRALAYER --> DOMLAYER
+
+    EF --> DB
+    AUDIT --> DB
+    FILES --> BLOB
+    MAIL --> SMTP
+    JOBS --> M3
+    JOBS --> M7
+    M4 -.-> ESC
+    M7 -.-> PDF</script>
+    </section></div><div class="panel" id="tab-data" role="tabpanel">
+    <section class="dg" data-src="src-03" data-key="03">
+      <div class="dg-head">
+        <div>
+          <h2 class="dg-title">Data model</h2>
+          <p class="dg-desc">Entity relationship diagram. Business actions belong to the factory profile; account and notification data belong to the user.</p>
+        </div>
+        <div class="dg-bar">
+          <button type="button" data-act="zoom-out" aria-label="Zoom out">&minus;</button>
+          <button type="button" data-act="zoom-in" aria-label="Zoom in">+</button>
+          <button type="button" data-act="fit">Fit</button>
+          <button type="button" data-act="copy">Copy Mermaid code</button>
+        </div>
+      </div>
+      <div class="diagram-wrap"><div class="dg-canvas"><p class="dg-loading">Rendering diagram&hellip;</p></div></div>
+      <script type="text/plain" id="src-03">erDiagram
+    USER ||--o| FACTORY_PROFILE : "has"
+    USER ||--o| USER_SETTINGS : "has"
+    USER ||--o{ AUDIT_LOG : "performs"
+    USER ||--o{ PLATFORM_SETTING : "updates"
+    USER ||--o{ NOTIFICATION : "receives"
+    USER ||--o{ VERIFICATION_DOCUMENT : "reviews"
+    USER ||--o{ DISPUTE : "resolves"
+    FACTORY_PROFILE ||--o{ VERIFICATION_DOCUMENT : "submits"
+    FACTORY_PROFILE ||--o{ OFFER : "posts"
+    FACTORY_PROFILE ||--o{ REQUEST : "posts"
+    FACTORY_PROFILE ||--o{ SAVED_SEARCH : "saves"
+    FACTORY_PROFILE ||--o{ SAMPLE_REQUEST : "asks for"
+    FACTORY_PROFILE ||--o{ DEAL : "sells in"
+    FACTORY_PROFILE ||--o{ DEAL : "buys in"
+    MATERIAL_CATEGORY ||--o{ OFFER : "classifies"
+    MATERIAL_CATEGORY ||--o{ REQUEST : "classifies"
+    MATERIAL_CATEGORY |o--o{ SAVED_SEARCH : "filters"
+    OFFER ||--o{ OFFER_IMAGE : "has"
+    OFFER ||--o{ MATCH : "matched in"
+    REQUEST ||--o{ MATCH : "matched in"
+    OFFER ||--o{ SAMPLE_REQUEST : "receives"
+    OFFER |o--o{ CONVERSATION : "discussed in"
+    REQUEST |o--o{ CONVERSATION : "discussed in"
+    CONVERSATION ||--o{ MESSAGE : "contains"
+    OFFER ||--o{ DEAL : "sold through"
+    REQUEST |o--o{ DEAL : "fulfilled by"
+    DEAL ||--|| ESCROW_PAYMENT : "secured by"
+    DEAL ||--o| DISPUTE : "may have"
+    DEAL ||--o| IMPACT_RECORD : "produces"
+
+    USER {
+        guid id PK
+        string email UK
+        string username UK
+        string password_hash
+        string role "User or Admin"
+        bool is_active
+        datetime created_at
+    }
+    FACTORY_PROFILE {
+        guid id PK
+        guid user_id FK, UK
+        string name
+        string sector
+        string address
+        geography location "map pin"
+        bool is_verified
+        datetime created_at
+    }
+    VERIFICATION_DOCUMENT {
+        guid id PK
+        guid factory_id FK
+        string doc_type
+        string file_url
+        string status "Pending, Approved, Rejected"
+        guid reviewed_by FK "admin user"
+        datetime reviewed_at
+    }
+    MATERIAL_CATEGORY {
+        guid id PK
+        string name UK
+        decimal co2_factor_per_kg "used for impact reports"
+        bool is_active
+    }
+    USER_SETTINGS {
+        guid user_id PK, FK
+        bool email_alerts
+        bool match_alerts
+        bool message_alerts
+        bool deal_alerts
+    }
+    PLATFORM_SETTING {
+        string setting_key PK
+        string setting_value
+        string description
+        guid updated_by FK "admin user"
+        datetime updated_at
+    }
+    AUDIT_LOG {
+        guid id PK
+        guid actor_user_id FK "empty for system jobs and failed sign-ins"
+        string action
+        string entity_type
+        guid entity_id "empty when no entity applies"
+        string details "changed fields, never secrets"
+        string ip_address
+        datetime created_at
+    }
+    OFFER {
+        guid id PK
+        guid factory_id FK
+        guid category_id FK
+        string title
+        string description
+        decimal quantity
+        string unit "Kg, Ton, Liter, CubicMeter, Piece"
+        decimal asking_unit_price "per one unit, EGP"
+        string status "Available, Reserved, Sold, Closed"
+        geography location
+        datetime created_at
+        datetime updated_at
+    }
+    OFFER_IMAGE {
+        guid id PK
+        guid offer_id FK
+        string url
+        int sort_order
+    }
+    REQUEST {
+        guid id PK
+        guid factory_id FK
+        guid category_id FK
+        string description
+        decimal quantity
+        string unit "Kg, Ton, Liter, CubicMeter, Piece"
+        geography preferred_location
+        int radius_km
+        string status "Open, Fulfilled, Closed"
+        datetime created_at
+    }
+    SAVED_SEARCH {
+        guid id PK
+        guid factory_id FK
+        guid category_id FK
+        string keywords
+        int radius_km
+        bool is_active
+    }
+    MATCH {
+        guid id PK
+        guid offer_id FK
+        guid request_id FK
+        decimal distance_km
+        datetime created_at
+    }
+    CONVERSATION {
+        guid id PK
+        string listing_type "Offer or Request"
+        guid offer_id FK "set when listing_type is Offer"
+        guid request_id FK "set when listing_type is Request"
+        guid initiator_factory_id FK
+        guid owner_factory_id FK
+        datetime created_at
+    }
+    MESSAGE {
+        guid id PK
+        guid conversation_id FK
+        guid sender_factory_id FK
+        string body
+        datetime sent_at
+        datetime read_at
+    }
+    SAMPLE_REQUEST {
+        guid id PK
+        guid offer_id FK
+        guid requester_factory_id FK
+        decimal quantity
+        string status "Requested, Approved, Sent, Declined"
+        datetime created_at
+    }
+    DEAL {
+        guid id PK
+        guid offer_id FK
+        guid request_id FK "optional"
+        guid seller_factory_id FK
+        guid buyer_factory_id FK
+        decimal quantity
+        string unit "Kg, Ton, Liter, CubicMeter, Piece"
+        decimal agreed_unit_price "per one unit, EGP"
+        decimal total_amount "quantity x unit price"
+        decimal distance_km
+        decimal transport_estimate "shown only, not paid through escrow"
+        string status
+        datetime inspection_deadline
+        datetime created_at
+        datetime completed_at
+    }
+    ESCROW_PAYMENT {
+        guid id PK
+        guid deal_id FK, UK
+        decimal amount "equals the deal total_amount"
+        string status "Pending, Held, Released, Refunded"
+        datetime held_at
+        datetime settled_at
+    }
+    DISPUTE {
+        guid id PK
+        guid deal_id FK
+        guid raised_by_factory_id FK
+        string reason
+        string status "Open, Resolved"
+        string resolution "Release to seller or Refund buyer"
+        guid resolved_by FK "admin user"
+        datetime created_at
+        datetime resolved_at
+    }
+    IMPACT_RECORD {
+        guid id PK
+        guid deal_id FK, UK
+        decimal co2_saved_kg
+        decimal waste_diverted_kg
+        datetime created_at
+    }
+    NOTIFICATION {
+        guid id PK
+        guid user_id FK
+        string type
+        string title
+        string body
+        bool is_read
+        datetime created_at
+    }</script>
+    </section></div><div class="panel" id="tab-domain" role="tabpanel">
+    <section class="dg" data-src="src-04" data-key="04">
+      <div class="dg-head">
+        <div>
+          <h2 class="dg-title">Domain model</h2>
+          <p class="dg-desc">Entities, enumerations and the methods that change their state.</p>
+        </div>
+        <div class="dg-bar">
+          <button type="button" data-act="zoom-out" aria-label="Zoom out">&minus;</button>
+          <button type="button" data-act="zoom-in" aria-label="Zoom in">+</button>
+          <button type="button" data-act="fit">Fit</button>
+          <button type="button" data-act="copy">Copy Mermaid code</button>
+        </div>
+      </div>
+      <div class="diagram-wrap"><div class="dg-canvas"><p class="dg-loading">Rendering diagram&hellip;</p></div></div>
+      <script type="text/plain" id="src-04">classDiagram
+    direction LR
+
+    class User {
+        +Guid Id
+        +string Email
+        +string Username
+        +string PasswordHash
+        +UserRole Role
+        +bool IsActive
+        +ChangePassword(newHash)
+        +Deactivate()
+        +Activate()
+    }
+    class FactoryProfile {
+        +Guid Id
+        +string Name
+        +string Sector
+        +string Address
+        +Point Location
+        +bool IsVerified
+        +Verify()
+    }
+    class VerificationDocument {
+        +Guid Id
+        +string DocType
+        +string FileUrl
+        +DocStatus Status
+        +Approve(adminId)
+        +Reject(adminId)
+    }
+    class MaterialCategory {
+        +Guid Id
+        +string Name
+        +decimal Co2FactorPerKg
+        +bool IsActive
+    }
+    class Offer {
+        +Guid Id
+        +string Title
+        +string Description
+        +decimal Quantity
+        +MeasurementUnit Unit
+        +decimal AskingUnitPrice
+        +Point Location
+        +OfferStatus Status
+        +MarkSold()
+        +Reserve()
+        +Release()
+        +Close()
+    }
+    class OfferImage {
+        +Guid Id
+        +string Url
+    }
+    class Request {
+        +Guid Id
+        +string Description
+        +decimal Quantity
+        +MeasurementUnit Unit
+        +Point PreferredLocation
+        +int RadiusKm
+        +RequestStatus Status
+        +Fulfil()
+        +Close()
+    }
+    class SavedSearch {
+        +Guid Id
+        +string Keywords
+        +int RadiusKm
+        +bool IsActive
+    }
+    class Match {
+        +Guid Id
+        +decimal DistanceKm
+    }
+    class SampleRequest {
+        +Guid Id
+        +decimal Quantity
+        +SampleStatus Status
+    }
+    class Conversation {
+        +Guid Id
+        +ListingType ListingType
+        +Guid OfferId
+        +Guid RequestId
+        +Send(senderId, body)
+    }
+    class Message {
+        +Guid Id
+        +string Body
+        +DateTime SentAt
+    }
+    class Deal {
+        +Guid Id
+        +decimal Quantity
+        +MeasurementUnit Unit
+        +decimal AgreedUnitPrice
+        +decimal TotalAmount
+        +decimal DistanceKm
+        +decimal TransportEstimate
+        +DealStatus Status
+        +DateTime InspectionDeadline
+        +Accept()
+        +MarkShipped()
+        +ConfirmDelivery()
+        +AcceptInspection()
+        +RaiseDispute(reason)
+        +Cancel()
+    }
+    class EscrowPayment {
+        +Guid Id
+        +decimal Amount
+        +EscrowStatus Status
+        +Hold()
+        +Release()
+        +Refund()
+    }
+    class Dispute {
+        +Guid Id
+        +string Reason
+        +DisputeStatus Status
+        +Resolve(adminId, resolution)
+    }
+    class ImpactRecord {
+        +Guid Id
+        +decimal Co2SavedKg
+        +decimal WasteDivertedKg
+    }
+    class Notification {
+        +Guid Id
+        +string Type
+        +string Title
+        +string Body
+        +bool IsRead
+        +MarkRead()
+    }
+
+    class UserSettings {
+        +bool EmailAlerts
+        +bool MatchAlerts
+        +bool MessageAlerts
+        +bool DealAlerts
+        +Update(email, match, message, deal)
+    }
+    class PlatformSetting {
+        +string SettingKey
+        +string Value
+        +string Description
+        +DateTime UpdatedAt
+        +Change(value, adminId)
+    }
+    class AuditLog {
+        +Guid Id
+        +Guid ActorUserId
+        +string Action
+        +string EntityType
+        +Guid EntityId
+        +string Details
+        +string IpAddress
+        +DateTime CreatedAt
+    }
+
+    class UserRole {
+        <<enumeration>>
+        User
+        Admin
+    }
+    class OfferStatus {
+        <<enumeration>>
+        Available
+        Reserved
+        Sold
+        Closed
+    }
+    class DealStatus {
+        <<enumeration>>
+        Proposed
+        Accepted
+        EscrowFunded
+        Shipped
+        InInspection
+        Disputed
+        Completed
+        Refunded
+        Cancelled
+    }
+    class EscrowStatus {
+        <<enumeration>>
+        Pending
+        Held
+        Released
+        Refunded
+    }
+
+    class MeasurementUnit {
+        <<enumeration>>
+        Kg
+        Ton
+        Liter
+        CubicMeter
+        Piece
+    }
+    class ListingType {
+        <<enumeration>>
+        Offer
+        Request
+    }
+
+    User "1" --> "0..1" FactoryProfile : owns
+    User "1" --> "*" Notification : receives
+    User "1" --> "0..1" UserSettings : has
+    User "1" --> "*" AuditLog : performs
+    User "1" --> "*" PlatformSetting : updates
+    FactoryProfile "1" --> "*" VerificationDocument : submits
+    FactoryProfile "1" --> "*" Offer : posts
+    FactoryProfile "1" --> "*" Request : posts
+    FactoryProfile "1" --> "*" SavedSearch : saves
+    MaterialCategory "1" --> "*" Offer : classifies
+    MaterialCategory "1" --> "*" Request : classifies
+    Offer "1" *-- "*" OfferImage : has
+    Offer "1" --> "*" Match : matched in
+    Request "1" --> "*" Match : matched in
+    Offer "1" --> "*" SampleRequest : receives
+    Offer "1" --> "*" Conversation : discussed in
+    Request "1" --> "*" Conversation : discussed in
+    Conversation "1" *-- "*" Message : contains
+    Offer "1" --> "*" Deal : sold through
+    Deal "1" *-- "1" EscrowPayment : secured by
+    Deal "1" o-- "0..1" Dispute : may have
+    Deal "1" --> "0..1" ImpactRecord : produces
+    FactoryProfile "1" --> "*" Deal : seller
+    FactoryProfile "1" --> "*" Deal : buyer</script>
+    </section></div><div class="panel" id="tab-life" role="tabpanel">
+    <section class="dg" data-src="src-05" data-key="05">
+      <div class="dg-head">
+        <div>
+          <h2 class="dg-title">Offer lifecycle</h2>
+          <p class="dg-desc">From creation to sold or withdrawn.</p>
+        </div>
+        <div class="dg-bar">
+          <button type="button" data-act="zoom-out" aria-label="Zoom out">&minus;</button>
+          <button type="button" data-act="zoom-in" aria-label="Zoom in">+</button>
+          <button type="button" data-act="fit">Fit</button>
+          <button type="button" data-act="copy">Copy Mermaid code</button>
+        </div>
+      </div>
+      <div class="diagram-wrap"><div class="dg-canvas"><p class="dg-loading">Rendering diagram&hellip;</p></div></div>
+      <script type="text/plain" id="src-05">stateDiagram-v2
+    direction LR
+    [*] --> Available : owner creates offer
+    Available --> Reserved : deal accepted
+    Reserved --> Available : deal cancelled or refunded
+    Reserved --> Sold : deal completed
+    Available --> Sold : owner marks as sold
+    Available --> Closed : owner withdraws offer
+    Sold --> [*]
+    Closed --> [*]</script>
+    </section>
+    <section class="dg" data-src="src-06" data-key="06">
+      <div class="dg-head">
+        <div>
+          <h2 class="dg-title">Deal lifecycle</h2>
+          <p class="dg-desc">Escrow, shipping, inspection and the two dispute outcomes.</p>
+        </div>
+        <div class="dg-bar">
+          <button type="button" data-act="zoom-out" aria-label="Zoom out">&minus;</button>
+          <button type="button" data-act="zoom-in" aria-label="Zoom in">+</button>
+          <button type="button" data-act="fit">Fit</button>
+          <button type="button" data-act="copy">Copy Mermaid code</button>
+        </div>
+      </div>
+      <div class="diagram-wrap"><div class="dg-canvas"><p class="dg-loading">Rendering diagram&hellip;</p></div></div>
+      <script type="text/plain" id="src-06">stateDiagram-v2
+    direction LR
+    [*] --> Proposed : interested user proposes quantity and price
+    Proposed --> Accepted : owner accepts
+    Proposed --> Cancelled : owner declines or proposer withdraws
+    Accepted --> EscrowFunded : buyer deposits to escrow
+    Accepted --> Cancelled : no deposit
+    EscrowFunded --> Shipped : seller ships
+    EscrowFunded --> Refunded : seller cancels, funds returned
+    Shipped --> InInspection : delivery confirmed
+    InInspection --> Completed : buyer accepts, funds released
+    InInspection --> Disputed : buyer reports defect
+    Disputed --> Completed : admin rules for seller, funds released
+    Disputed --> Refunded : admin rules for buyer, funds returned
+    Completed --> [*]
+    Refunded --> [*]
+    Cancelled --> [*]
+    note right of InInspection
+        Escrow stays held for the
+        whole inspection period
+    end note</script>
+    </section></div><div class="panel" id="tab-flows" role="tabpanel">
+    <section class="dg" data-src="src-07" data-key="07">
+      <div class="dg-head">
+        <div>
+          <h2 class="dg-title">Posting an offer and matching</h2>
+          <p class="dg-desc">Keyword, filter and radius matching, then notifications and chat.</p>
+        </div>
+        <div class="dg-bar">
+          <button type="button" data-act="zoom-out" aria-label="Zoom out">&minus;</button>
+          <button type="button" data-act="zoom-in" aria-label="Zoom in">+</button>
+          <button type="button" data-act="fit">Fit</button>
+          <button type="button" data-act="copy">Copy Mermaid code</button>
+        </div>
+      </div>
+      <div class="diagram-wrap"><div class="dg-canvas"><p class="dg-loading">Rendering diagram&hellip;</p></div></div>
+      <script type="text/plain" id="src-07">sequenceDiagram
+    autonumber
+    actor S as User (offering)
+    participant SPA as React SPA
+    participant API as .NET 8 API
+    participant APP as Application Layer
+    participant DB as SQL Server
+    participant MATCH as Matching Service
+    participant NOTIF as Notification Service
+    actor B as User (demanding)
+
+    S->>SPA: Fill offer form (type, quantity, unit, images, asking price per unit)
+    SPA->>API: POST /api/offers (JWT)
+    API->>APP: CreateOfferCommand
+    APP->>DB: Save Offer, OfferImages, location point, AuditLog row (same transaction)
+    DB-->>APP: Offer saved
+    APP-->>API: OfferCreated
+    API-->>SPA: 201 Created
+    SPA-->>S: Offer is live
+
+    APP->>MATCH: OfferCreated event
+    MATCH->>DB: Find open Requests and SavedSearches by category, keywords, status
+    MATCH->>DB: Filter by radius (STDistance) and rank by distance
+    DB-->>MATCH: Candidate requests and saved searches
+
+    alt Matches found
+        MATCH->>DB: Save Match rows
+        MATCH->>NOTIF: Notify owners of matched requests and saved searches
+        NOTIF->>DB: Save Notification rows
+        NOTIF-->>B: Real-time alert (SignalR) + email
+        B->>SPA: Open notification
+        SPA->>API: GET /api/offers/{id}
+        API-->>SPA: Offer details, images, distance, asking price per unit
+        B->>SPA: Press Contact on the listing
+        SPA->>API: POST /api/conversations (listing type, listing id)
+        API-->>S: New chat alert (SignalR)
+    else No match
+        MATCH-->>APP: No matches, offer stays searchable
+    end</script>
+    </section>
+    <section class="dg" data-src="src-08" data-key="08">
+      <div class="dg-head">
+        <div>
+          <h2 class="dg-title">Deal with escrow</h2>
+          <p class="dg-desc">Sample, deal, escrow, shipping and inspection, ending in release or an admin-mediated dispute.</p>
+        </div>
+        <div class="dg-bar">
+          <button type="button" data-act="zoom-out" aria-label="Zoom out">&minus;</button>
+          <button type="button" data-act="zoom-in" aria-label="Zoom in">+</button>
+          <button type="button" data-act="fit">Fit</button>
+          <button type="button" data-act="copy">Copy Mermaid code</button>
+        </div>
+      </div>
+      <div class="diagram-wrap"><div class="dg-canvas"><p class="dg-loading">Rendering diagram&hellip;</p></div></div>
+      <script type="text/plain" id="src-08">sequenceDiagram
+    autonumber
+    actor B as User (buyer in this deal)
+    actor S as User (seller in this deal)
+    participant API as .NET 8 API
+    participant DEAL as Deal Service
+    participant ESC as Escrow Service
+    participant DB as SQL Server
+    participant NOTIF as Notification Service
+    actor ADM as Admin
+
+    Note over B,ADM: Every command below also writes an AuditLog row in the same database transaction
+
+    opt Sample first
+        B->>API: Request sample quantity
+        API->>DB: Save SampleRequest
+        API->>NOTIF: Notify seller
+    end
+
+    B->>API: Propose deal (quantity, unit price, prefilled from the asking price)
+    API->>DEAL: CreateDeal
+    DEAL->>DB: Compute total = quantity x unit price and a transport estimate, save Deal (Proposed)
+    DEAL->>NOTIF: Notify seller
+    S->>API: Accept deal
+    DEAL->>DB: Deal = Accepted (price and quantity locked), Offer = Reserved
+
+    B->>API: Deposit the deal total
+    API->>ESC: Hold(dealId, total amount)
+    ESC->>DB: EscrowPayment = Held, Deal = EscrowFunded
+    ESC->>NOTIF: Notify seller funds are secured
+
+    S->>API: Mark shipped
+    DEAL->>DB: Deal = Shipped
+    B->>API: Confirm delivery
+    DEAL->>DB: Deal = InInspection, set inspection deadline
+
+    alt Buyer accepts goods
+        B->>API: Accept inspection
+        API->>ESC: Release(dealId)
+        ESC->>DB: Escrow = Released, Deal = Completed, Offer = Sold
+        DEAL->>DB: Create ImpactRecord (CO2 saved, waste diverted)
+        DEAL->>NOTIF: Notify both parties, dashboards updated
+    else Buyer reports defect
+        B->>API: Raise dispute with reason
+        DEAL->>DB: Deal = Disputed, Dispute = Open (escrow stays Held)
+        DEAL->>NOTIF: Notify seller and Admin
+        ADM->>API: Review evidence and mediate
+        alt Ruling for seller
+            API->>ESC: Release(dealId)
+            ESC->>DB: Escrow = Released, Deal = Completed
+        else Ruling for buyer
+            API->>ESC: Refund(dealId)
+            ESC->>DB: Escrow = Refunded, Deal = Refunded, Offer = Available
+        end
+        DEAL->>NOTIF: Notify both parties of resolution
+    end</script>
+    </section></div><div class="panel" id="tab-admin" role="tabpanel"><div class="grid" style="margin-bottom:28px"><div class="card"><div class="card-header"><span class="card-badge badge-abstract">How it works</span><span class="card-title">Admin dashboard</span></div><div class="card-body pad"><ul class="plain-list"><li>It is not a separate system. It is the same app and API, with screens and endpoints that only the Admin role can open.</li><li>The frontend hides the admin routes for other roles. The backend refuses them with a 403, which is the check that counts.</li><li>Its numbers are counts over tables that already exist (users, offers, deals, disputes, impact records), so it needs no table of its own.</li></ul></div></div><div class="card"><div class="card-header"><span class="card-badge badge-entity">How it works</span><span class="card-title">User settings</span></div><div class="card-body pad"><ul class="plain-list"><li>One UserSettings row per account, created with defaults at registration.</li><li>The notification service reads it before it pushes or emails an alert.</li><li>Changing a password checks the current one first, then stores a new hash.</li><li>Factory details stay under Profiles, not Settings.</li></ul></div></div><div class="card"><div class="card-header"><span class="card-badge badge-vo">How it works</span><span class="card-title">Platform settings</span></div><div class="card-body pad"><ul class="plain-list"><li>Key and value rows an admin can edit, such as the inspection period in days or the transport cost per kilometre.</li><li>Services read them (cached) instead of hard-coding numbers, so changing one needs no new release.</li><li>Each material category carries a CO2 factor, which is how a completed deal turns into an impact record.</li></ul></div></div><div class="card"><div class="card-header"><span class="card-badge badge-interface">How it works</span><span class="card-title">Audit log</span></div><div class="card-body pad"><ul class="plain-list"><li>Every create, update, delete and status change by a user or an admin writes a row automatically, from the first release.</li><li>The row is saved in the same database transaction as the change, so neither can exist without the other.</li><li>The screen to browse it can come later. The writing cannot.</li></ul></div></div><div class="card"><div class="card-header"><span class="card-badge badge-enum">MVP</span><span class="card-title">What the MVP skips</span></div><div class="card-body pad"><ul class="plain-list"><li>Seed the admin account and the material categories directly in the database.</li><li>The audit log is not skipped. It is written from day one.</li><li>Build the admin screens after the user flow works.</li></ul></div></div></div>
+    <section class="dg" data-src="src-11" data-key="11">
+      <div class="dg-head">
+        <div>
+          <h2 class="dg-title">Admin and settings API</h2>
+          <p class="dg-desc">Admin controllers with their commands and queries, plus the admin response DTOs.</p>
+        </div>
+        <div class="dg-bar">
+          <button type="button" data-act="zoom-out" aria-label="Zoom out">&minus;</button>
+          <button type="button" data-act="zoom-in" aria-label="Zoom in">+</button>
+          <button type="button" data-act="fit">Fit</button>
+          <button type="button" data-act="copy">Copy Mermaid code</button>
+        </div>
+      </div>
+      <div class="diagram-wrap"><div class="dg-canvas"><p class="dg-loading">Rendering diagram&hellip;</p></div></div>
+      <script type="text/plain" id="src-11">classDiagram
+    direction LR
+
+    class AdminController {
+        +Dashboard() AdminDashboardDto
+        +ListUsers(AdminUsersQuery) PagedResult~AdminUserDto~
+        +SetUserActive(SetUserActiveCommand) AdminUserDto
+        +PendingVerifications() PagedResult~PendingVerificationDto~
+        +ReviewDocument(ReviewDocumentCommand) VerificationDocumentDto
+        +ListDeals(AdminDealsQuery) PagedResult~DealDto~
+        +ListDisputes(AdminDisputesQuery) PagedResult~DisputeDto~
+        +ResolveDispute(ResolveDisputeCommand) DisputeDto
+        +ComplianceReport(ComplianceReportQuery) PdfFile
+        +ListAuditLog(AuditLogQuery) PagedResult~AuditLogDto~
+    }
+    class AdminCategoriesController {
+        +Create(CreateCategoryCommand) CategoryDto
+        +Update(UpdateCategoryCommand) CategoryDto
+    }
+    class AdminSettingsController {
+        +GetAll() List~PlatformSettingDto~
+        +Update(UpdatePlatformSettingCommand) PlatformSettingDto
+    }
+
+    class AdminUsersQuery {
+        +string Search
+        +string Role
+        +bool IsActive
+        +bool IsVerified
+        +int Page
+        +int PageSize
+    }
+    class SetUserActiveCommand {
+        +Guid UserId
+        +bool IsActive
+        +string Reason
+    }
+    class ReviewDocumentCommand {
+        +Guid DocumentId
+        +bool Approved
+        +string Reason
+    }
+    class AdminDealsQuery {
+        +string Status
+        +DateTime From
+        +DateTime To
+        +int Page
+        +int PageSize
+    }
+    class AdminDisputesQuery {
+        +string Status
+        +int Page
+        +int PageSize
+    }
+    class ResolveDisputeCommand {
+        +Guid DisputeId
+        +DisputeResolution Resolution
+        +string Notes
+    }
+    class ComplianceReportQuery {
+        +DateTime From
+        +DateTime To
+    }
+    class AuditLogQuery {
+        +Guid ActorUserId
+        +string EntityType
+        +Guid EntityId
+        +string Action
+        +DateTime From
+        +DateTime To
+        +int Page
+        +int PageSize
+    }
+    class CreateCategoryCommand {
+        +string Name
+        +decimal Co2FactorPerKg
+    }
+    class UpdateCategoryCommand {
+        +Guid CategoryId
+        +string Name
+        +decimal Co2FactorPerKg
+        +bool IsActive
+    }
+    class UpdatePlatformSettingCommand {
+        +string SettingKey
+        +string Value
+    }
+
+    class AdminDashboardDto {
+        +int TotalUsers
+        +int VerifiedFactories
+        +int PendingVerifications
+        +int ActiveOffers
+        +int ActiveRequests
+        +int DealsInProgress
+        +int OpenDisputes
+        +int CompletedDeals
+        +decimal Co2SavedKg
+        +decimal WasteDivertedKg
+    }
+    class AdminUserDto {
+        +Guid UserId
+        +string Email
+        +string Username
+        +string Role
+        +bool IsActive
+        +string FactoryName
+        +bool IsVerified
+        +DateTime CreatedAt
+    }
+    class PendingVerificationDto {
+        +Guid FactoryId
+        +string FactoryName
+        +List~VerificationDocumentDto~ Documents
+    }
+    class AuditLogDto {
+        +Guid Id
+        +Guid ActorUserId
+        +string ActorEmail
+        +string Action
+        +string EntityType
+        +Guid EntityId
+        +string Details
+        +string IpAddress
+        +DateTime CreatedAt
+    }
+    class PlatformSettingDto {
+        +string SettingKey
+        +string Value
+        +string Description
+        +DateTime UpdatedAt
+    }
+
+    AdminController ..> AdminUsersQuery
+    AdminController ..> SetUserActiveCommand
+    AdminController ..> ReviewDocumentCommand
+    AdminController ..> AdminDealsQuery
+    AdminController ..> AdminDisputesQuery
+    AdminController ..> ResolveDisputeCommand
+    AdminController ..> ComplianceReportQuery
+    AdminCategoriesController ..> CreateCategoryCommand
+    AdminCategoriesController ..> UpdateCategoryCommand
+    AdminSettingsController ..> UpdatePlatformSettingCommand
+    AdminController ..> AdminDashboardDto
+    AdminController ..> AdminUserDto
+    AdminController ..> PendingVerificationDto
+    AdminSettingsController ..> PlatformSettingDto
+    AdminController ..> AuditLogQuery
+    AdminController ..> AuditLogDto</script>
+    </section>
+    <section class="dg" data-src="src-12" data-key="12">
+      <div class="dg-head">
+        <div>
+          <h2 class="dg-title">Admin and settings in action</h2>
+          <p class="dg-desc">Verifying a factory, changing a platform setting, a deal using it, and user alert preferences.</p>
+        </div>
+        <div class="dg-bar">
+          <button type="button" data-act="zoom-out" aria-label="Zoom out">&minus;</button>
+          <button type="button" data-act="zoom-in" aria-label="Zoom in">+</button>
+          <button type="button" data-act="fit">Fit</button>
+          <button type="button" data-act="copy">Copy Mermaid code</button>
+        </div>
+      </div>
+      <div class="diagram-wrap"><div class="dg-canvas"><p class="dg-loading">Rendering diagram&hellip;</p></div></div>
+      <script type="text/plain" id="src-12">sequenceDiagram
+    autonumber
+    actor ADM as Admin
+    actor F as User (factory)
+    participant SPA as React SPA
+    participant API as .NET 8 API
+    participant APP as Application Layer
+    participant DB as SQL Server
+    participant NOTIF as Notification Service
+
+    Note over ADM,NOTIF: A. Admin verifies a factory
+    ADM->>SPA: Open pending verifications
+    SPA->>API: GET pending verifications (JWT)
+    API->>API: Role check, Admin only (403 otherwise)
+    API->>APP: Pending verifications query
+    APP->>DB: Read factories with pending documents
+    DB-->>API: Rows
+    API-->>SPA: Paged PendingVerificationDto list
+    ADM->>SPA: Approve or reject a document
+    SPA->>API: POST review (documentId, approved, reason)
+    API->>APP: ReviewDocumentCommand
+    APP->>DB: Update document status, set factory verified
+    APP->>DB: Write AuditLog entry
+    APP->>NOTIF: Tell the factory the decision
+    NOTIF-->>F: Alert
+
+    Note over ADM,NOTIF: B. Admin changes a platform setting
+    ADM->>SPA: Set inspection period to 5 days
+    SPA->>API: PUT setting (key, value)
+    API->>APP: UpdatePlatformSettingCommand
+    APP->>DB: Update PlatformSetting, write AuditLog entry
+    APP-->>API: Saved, cached settings cleared
+    API-->>SPA: PlatformSettingDto
+
+    Note over ADM,NOTIF: C. A later deal uses that setting
+    F->>API: Confirm delivery on a deal
+    API->>APP: ConfirmDeliveryCommand
+    APP->>DB: Read inspection period setting
+    APP->>DB: Deal = InInspection, deadline = now + 5 days
+
+    Note over ADM,NOTIF: D. A user sets alert preferences
+    F->>SPA: Turn off email for match alerts
+    SPA->>API: PUT my settings
+    API->>APP: UpdateUserSettingsCommand
+    APP->>DB: Update UserSettings
+    APP->>NOTIF: Later, a match is found for this factory
+    NOTIF->>DB: Read the factory UserSettings
+    alt Match alerts on
+        NOTIF-->>F: In-app alert, plus email if email alerts are on
+    else Match alerts off
+        NOTIF->>DB: Save the notification only, no push or email
+    end</script>
+    </section></div><div class="panel" id="tab-api" role="tabpanel">
+    <section class="dg" data-src="src-09" data-key="09">
+      <div class="dg-head">
+        <div>
+          <h2 class="dg-title">API inputs</h2>
+          <p class="dg-desc">User-facing controllers and the commands and queries they accept.</p>
+        </div>
+        <div class="dg-bar">
+          <button type="button" data-act="zoom-out" aria-label="Zoom out">&minus;</button>
+          <button type="button" data-act="zoom-in" aria-label="Zoom in">+</button>
+          <button type="button" data-act="fit">Fit</button>
+          <button type="button" data-act="copy">Copy Mermaid code</button>
+        </div>
+      </div>
+      <div class="diagram-wrap"><div class="dg-canvas"><p class="dg-loading">Rendering diagram&hellip;</p></div></div>
+      <script type="text/plain" id="src-09">classDiagram
+    direction LR
+
+    class AuthController {
+        +Register(RegisterCommand) AuthResponseDto
+        +Login(LoginCommand) AuthResponseDto
+    }
+    class ProfilesController {
+        +GetMine() FactoryProfileDto
+        +Update(UpdateFactoryProfileCommand) FactoryProfileDto
+        +UploadDocument(UploadVerificationDocumentCommand) VerificationDocumentDto
+    }
+    class OffersController {
+        +Create(CreateOfferCommand) OfferDetailsDto
+        +Update(UpdateOfferCommand) OfferDetailsDto
+        +ChangeStatus(ChangeOfferStatusCommand) OfferDetailsDto
+        +GetById(Guid) OfferDetailsDto
+        +GetMine() PagedResult~OfferSummaryDto~
+    }
+    class RequestsController {
+        +Create(CreateRequestCommand) RequestDetailsDto
+        +Update(UpdateRequestCommand) RequestDetailsDto
+        +GetById(Guid) RequestDetailsDto
+        +Close(Guid) RequestDetailsDto
+        +GetMine() PagedResult~RequestSummaryDto~
+    }
+    class SearchController {
+        +SearchOffers(SearchOffersQuery) PagedResult~OfferSummaryDto~
+        +SearchRequests(SearchRequestsQuery) PagedResult~RequestSummaryDto~
+        +SaveSearch(SaveSearchCommand) SavedSearchDto
+    }
+    class DealsController {
+        +RequestSample(RequestSampleCommand) SampleRequestDto
+        +GetMine() PagedResult~DealDto~
+        +GetById(Guid) DealDto
+        +RespondToSample(RespondToSampleCommand) SampleRequestDto
+        +Propose(ProposeDealCommand) DealDto
+        +Cancel(Guid) DealDto
+        +Accept(Guid) DealDto
+        +DepositEscrow(Guid) DealDto
+        +MarkShipped(Guid) DealDto
+        +ConfirmDelivery(Guid) DealDto
+        +AcceptInspection(Guid) DealDto
+        +RaiseDispute(RaiseDisputeCommand) DisputeDto
+    }
+    class DashboardController {
+        +GetMine() DashboardDto
+        +ImpactReport(ImpactReportQuery) ImpactReportDto
+    }
+    class NotificationsController {
+        +GetMine() PagedResult~NotificationDto~
+        +MarkRead(Guid) NotificationDto
+        +MarkAllRead()
+    }
+    class SettingsController {
+        +GetMine() UserSettingsDto
+        +Update(UpdateUserSettingsCommand) UserSettingsDto
+        +ChangePassword(ChangePasswordCommand)
+    }
+    class CategoriesController {
+        +GetAll() List~CategoryDto~
+    }
+    class ChatController {
+        +GetMine() PagedResult~ConversationDto~
+        +GetMessages(Guid) PagedResult~MessageDto~
+        +Start(StartConversationCommand) ConversationDto
+        +Send(SendMessageCommand) MessageDto
+    }
+
+    class ImpactReportQuery {
+        +DateTime From
+        +DateTime To
+    }
+    class UpdateUserSettingsCommand {
+        +bool EmailAlerts
+        +bool MatchAlerts
+        +bool MessageAlerts
+        +bool DealAlerts
+    }
+    class ChangePasswordCommand {
+        +string CurrentPassword
+        +string NewPassword
+    }
+
+    class RegisterCommand {
+        +string Email
+        +string Username
+        +string Password
+        +string FactoryName
+        +string Sector
+        +string Address
+        +double Latitude
+        +double Longitude
+    }
+    class LoginCommand {
+        +string EmailOrUsername
+        +string Password
+    }
+    class UpdateFactoryProfileCommand {
+        +string Name
+        +string Sector
+        +string Address
+        +double Latitude
+        +double Longitude
+    }
+    class UploadVerificationDocumentCommand {
+        +string DocType
+        +IFormFile File
+    }
+    class CreateOfferCommand {
+        +Guid CategoryId
+        +string Title
+        +string Description
+        +decimal Quantity
+        +MeasurementUnit Unit
+        +decimal AskingUnitPrice
+        +double Latitude
+        +double Longitude
+        +List~IFormFile~ Images
+    }
+    class UpdateOfferCommand {
+        +Guid OfferId
+        +string Title
+        +string Description
+        +decimal Quantity
+        +decimal AskingUnitPrice
+    }
+    class ChangeOfferStatusCommand {
+        +Guid OfferId
+        +OfferStatus NewStatus
+    }
+    class CreateRequestCommand {
+        +Guid CategoryId
+        +string Description
+        +decimal Quantity
+        +MeasurementUnit Unit
+        +double Latitude
+        +double Longitude
+        +int RadiusKm
+    }
+    class UpdateRequestCommand {
+        +Guid RequestId
+        +string Description
+        +decimal Quantity
+        +int RadiusKm
+    }
+    class SearchOffersQuery {
+        +string Keywords
+        +Guid CategoryId
+        +decimal MinQuantity
+        +decimal MaxQuantity
+        +MeasurementUnit Unit
+        +double Latitude
+        +double Longitude
+        +int RadiusKm
+        +string SortBy
+        +int Page
+        +int PageSize
+    }
+    class SearchRequestsQuery {
+        +string Keywords
+        +Guid CategoryId
+        +int RadiusKm
+        +int Page
+        +int PageSize
+    }
+    class SaveSearchCommand {
+        +string Keywords
+        +Guid CategoryId
+        +int RadiusKm
+    }
+    class RequestSampleCommand {
+        +Guid OfferId
+        +decimal Quantity
+    }
+    class ProposeDealCommand {
+        +Guid OfferId
+        +Guid RequestId
+        +decimal Quantity
+        +decimal AgreedUnitPrice
+    }
+    class RespondToSampleCommand {
+        +Guid SampleRequestId
+        +bool Approve
+        +string Note
+    }
+    class RaiseDisputeCommand {
+        +Guid DealId
+        +string Reason
+    }
+    class StartConversationCommand {
+        +ListingType ListingType
+        +Guid ListingId
+    }
+    class SendMessageCommand {
+        +Guid ConversationId
+        +string Body
+    }
+
+    AuthController ..> RegisterCommand
+    AuthController ..> LoginCommand
+    ProfilesController ..> UpdateFactoryProfileCommand
+    ProfilesController ..> UploadVerificationDocumentCommand
+    OffersController ..> CreateOfferCommand
+    OffersController ..> UpdateOfferCommand
+    OffersController ..> ChangeOfferStatusCommand
+    RequestsController ..> CreateRequestCommand
+    RequestsController ..> UpdateRequestCommand
+    SearchController ..> SearchOffersQuery
+    SearchController ..> SearchRequestsQuery
+    SearchController ..> SaveSearchCommand
+    DealsController ..> RequestSampleCommand
+    DealsController ..> ProposeDealCommand
+    DealsController ..> RaiseDisputeCommand
+    ChatController ..> StartConversationCommand
+    ChatController ..> SendMessageCommand
+    DashboardController ..> ImpactReportQuery
+    SettingsController ..> UpdateUserSettingsCommand
+    SettingsController ..> ChangePasswordCommand
+    DealsController ..> RespondToSampleCommand</script>
+    </section>
+    <section class="dg" data-src="src-10" data-key="10">
+      <div class="dg-head">
+        <div>
+          <h2 class="dg-title">API responses</h2>
+          <p class="dg-desc">User-facing response DTOs, paging and error shape. Entities never leave the Application layer.</p>
+        </div>
+        <div class="dg-bar">
+          <button type="button" data-act="zoom-out" aria-label="Zoom out">&minus;</button>
+          <button type="button" data-act="zoom-in" aria-label="Zoom in">+</button>
+          <button type="button" data-act="fit">Fit</button>
+          <button type="button" data-act="copy">Copy Mermaid code</button>
+        </div>
+      </div>
+      <div class="diagram-wrap"><div class="dg-canvas"><p class="dg-loading">Rendering diagram&hellip;</p></div></div>
+      <script type="text/plain" id="src-10">classDiagram
+    direction LR
+
+    class PagedResult~T~ {
+        +List~T~ Items
+        +int Page
+        +int PageSize
+        +int TotalCount
+    }
+    class ErrorResponse {
+        +string Code
+        +string Message
+        +Dictionary~string, string[]~ ValidationErrors
+    }
+    class AuthResponseDto {
+        +string AccessToken
+        +DateTime ExpiresAt
+        +Guid UserId
+        +string Role
+        +Guid FactoryId
+    }
+    class FactorySummaryDto {
+        +Guid Id
+        +string Name
+        +string Sector
+        +bool IsVerified
+    }
+    class FactoryProfileDto {
+        +Guid Id
+        +string Name
+        +string Sector
+        +string Address
+        +double Latitude
+        +double Longitude
+        +bool IsVerified
+    }
+    class VerificationDocumentDto {
+        +Guid Id
+        +string DocType
+        +string Status
+        +DateTime ReviewedAt
+    }
+    class OfferImageDto {
+        +Guid Id
+        +string Url
+    }
+    class OfferSummaryDto {
+        +Guid Id
+        +string Title
+        +string CategoryName
+        +decimal Quantity
+        +string Unit
+        +decimal AskingUnitPrice
+        +string Status
+        +string ThumbnailUrl
+        +decimal DistanceKm
+    }
+    class OfferDetailsDto {
+        +Guid Id
+        +string Title
+        +string Description
+        +string CategoryName
+        +decimal Quantity
+        +string Unit
+        +decimal AskingUnitPrice
+        +string Status
+        +double Latitude
+        +double Longitude
+        +decimal DistanceKm
+        +DateTime CreatedAt
+    }
+    class RequestSummaryDto {
+        +Guid Id
+        +string CategoryName
+        +decimal Quantity
+        +string Unit
+        +int RadiusKm
+        +string Status
+    }
+    class RequestDetailsDto {
+        +Guid Id
+        +string Description
+        +decimal Quantity
+        +string Unit
+        +double Latitude
+        +double Longitude
+        +int RadiusKm
+        +string Status
+    }
+    class CategoryDto {
+        +Guid Id
+        +string Name
+        +bool IsActive
+    }
+    class UserSettingsDto {
+        +bool EmailAlerts
+        +bool MatchAlerts
+        +bool MessageAlerts
+        +bool DealAlerts
+    }
+    class SavedSearchDto {
+        +Guid Id
+        +string Keywords
+        +int RadiusKm
+        +bool IsActive
+    }
+    class SampleRequestDto {
+        +Guid Id
+        +Guid OfferId
+        +decimal Quantity
+        +string Status
+    }
+    class EscrowDto {
+        +decimal Amount
+        +string Status
+        +DateTime HeldAt
+        +DateTime SettledAt
+    }
+    class DisputeDto {
+        +Guid Id
+        +string Reason
+        +string Status
+        +string Resolution
+        +DateTime ResolvedAt
+    }
+    class DealDto {
+        +Guid Id
+        +decimal Quantity
+        +string Unit
+        +decimal AgreedUnitPrice
+        +decimal TotalAmount
+        +decimal DistanceKm
+        +decimal TransportEstimate
+        +string Status
+        +DateTime InspectionDeadline
+    }
+    class ConversationDto {
+        +Guid Id
+        +string ListingType
+        +Guid ListingId
+        +string ListingTitle
+        +int UnreadCount
+    }
+    class MessageDto {
+        +Guid Id
+        +Guid SenderFactoryId
+        +string Body
+        +DateTime SentAt
+    }
+    class NotificationDto {
+        +Guid Id
+        +string Type
+        +string Title
+        +string Body
+        +bool IsRead
+        +DateTime CreatedAt
+    }
+    class DashboardDto {
+        +int ActiveOffers
+        +int ActiveRequests
+        +int CompletedDeals
+        +decimal Co2SavedKg
+        +decimal WasteDivertedKg
+        +decimal CostSavings
+    }
+    class ImpactReportDto {
+        +DateTime From
+        +DateTime To
+        +decimal Co2SavedKg
+        +decimal WasteDivertedKg
+        +int CompletedDeals
+    }
+
+    OfferDetailsDto --> FactorySummaryDto : owner
+    OfferDetailsDto *-- OfferImageDto : images
+    OfferSummaryDto ..> PagedResult : listed in
+    RequestSummaryDto ..> PagedResult : listed in
+    RequestDetailsDto --> FactorySummaryDto : owner
+    DealDto --> OfferSummaryDto : offer
+    DealDto --> FactorySummaryDto : seller
+    DealDto --> FactorySummaryDto : buyer
+    DealDto *-- EscrowDto : escrow
+    DealDto o-- DisputeDto : dispute
+    ConversationDto --> FactorySummaryDto : other party
+    ConversationDto *-- MessageDto : last message</script>
+    </section></div><div class="panel" id="tab-catalog" role="tabpanel"><div class="grid">
+    <div class="card">
+      <div class="card-header"><span class="card-badge badge-entity">Entity</span><span class="card-title">User</span></div>
+      <div class="card-desc">Account used to sign in. The role decides whether it is a User or an Admin.</div>
+      <div class="card-body"><div class="section-label">Attributes</div><ul class="attr-list"><li><span class="token-name">Id</span><span class="token-type">: Guid</span></li><li><span class="token-name">Email</span><span class="token-type">: string</span></li><li><span class="token-name">Username</span><span class="token-type">: string</span></li><li><span class="token-name">PasswordHash</span><span class="token-type">: string</span></li><li><span class="token-name">Role</span><span class="token-type">: UserRole</span></li><li><span class="token-name">IsActive</span><span class="token-type">: bool</span></li></ul><div class="section-label">Methods</div><ul class="method-list"><li><span class="token-name">ChangePassword(newHash)</span></li><li><span class="token-name">Deactivate()</span></li><li><span class="token-name">Activate()</span></li></ul></div>
+    </div>
+    <div class="card">
+      <div class="card-header"><span class="card-badge badge-entity">Entity</span><span class="card-title">FactoryProfile</span></div>
+      <div class="card-desc">The factory behind a User account: sector, address and map location. Offers, requests and deals belong to it.</div>
+      <div class="card-body"><div class="section-label">Attributes</div><ul class="attr-list"><li><span class="token-name">Id</span><span class="token-type">: Guid</span></li><li><span class="token-name">Name</span><span class="token-type">: string</span></li><li><span class="token-name">Sector</span><span class="token-type">: string</span></li><li><span class="token-name">Address</span><span class="token-type">: string</span></li><li><span class="token-name">Location</span><span class="token-type">: Point</span></li><li><span class="token-name">IsVerified</span><span class="token-type">: bool</span></li></ul><div class="section-label">Methods</div><ul class="method-list"><li><span class="token-name">Verify()</span></li></ul></div>
+    </div>
+    <div class="card">
+      <div class="card-header"><span class="card-badge badge-entity">Entity</span><span class="card-title">VerificationDocument</span></div>
+      <div class="card-desc">Document a factory uploads for verification. An admin approves or rejects it.</div>
+      <div class="card-body"><div class="section-label">Attributes</div><ul class="attr-list"><li><span class="token-name">Id</span><span class="token-type">: Guid</span></li><li><span class="token-name">DocType</span><span class="token-type">: string</span></li><li><span class="token-name">FileUrl</span><span class="token-type">: string</span></li><li><span class="token-name">Status</span><span class="token-type">: DocStatus</span></li></ul><div class="section-label">Methods</div><ul class="method-list"><li><span class="token-name">Approve(adminId)</span></li><li><span class="token-name">Reject(adminId)</span></li></ul></div>
+    </div>
+    <div class="card">
+      <div class="card-header"><span class="card-badge badge-entity">Entity</span><span class="card-title">MaterialCategory</span></div>
+      <div class="card-desc">Material type that classifies offers, requests and saved searches. Carries the CO2 factor used in impact reports.</div>
+      <div class="card-body"><div class="section-label">Attributes</div><ul class="attr-list"><li><span class="token-name">Id</span><span class="token-type">: Guid</span></li><li><span class="token-name">Name</span><span class="token-type">: string</span></li><li><span class="token-name">Co2FactorPerKg</span><span class="token-type">: decimal</span></li><li><span class="token-name">IsActive</span><span class="token-type">: bool</span></li></ul></div>
+    </div>
+    <div class="card">
+      <div class="card-header"><span class="card-badge badge-entity">Entity</span><span class="card-title">Offer</span></div>
+      <div class="card-desc">Industrial by-product a factory supplies: quantity, unit, asking price per unit and availability.</div>
+      <div class="card-body"><div class="section-label">Attributes</div><ul class="attr-list"><li><span class="token-name">Id</span><span class="token-type">: Guid</span></li><li><span class="token-name">Title</span><span class="token-type">: string</span></li><li><span class="token-name">Description</span><span class="token-type">: string</span></li><li><span class="token-name">Quantity</span><span class="token-type">: decimal</span></li><li><span class="token-name">Unit</span><span class="token-type">: MeasurementUnit</span></li><li><span class="token-name">AskingUnitPrice</span><span class="token-type">: decimal</span></li><li><span class="token-name">Location</span><span class="token-type">: Point</span></li><li><span class="token-name">Status</span><span class="token-type">: OfferStatus</span></li></ul><div class="section-label">Methods</div><ul class="method-list"><li><span class="token-name">MarkSold()</span></li><li><span class="token-name">Reserve()</span></li><li><span class="token-name">Release()</span></li><li><span class="token-name">Close()</span></li></ul></div>
+    </div>
+    <div class="card">
+      <div class="card-header"><span class="card-badge badge-entity">Entity</span><span class="card-title">OfferImage</span></div>
+      <div class="card-desc">Photo attached to an offer.</div>
+      <div class="card-body"><div class="section-label">Attributes</div><ul class="attr-list"><li><span class="token-name">Id</span><span class="token-type">: Guid</span></li><li><span class="token-name">Url</span><span class="token-type">: string</span></li></ul></div>
+    </div>
+    <div class="card">
+      <div class="card-header"><span class="card-badge badge-entity">Entity</span><span class="card-title">Request</span></div>
+      <div class="card-desc">Raw material a factory is looking for, with a preferred location and search radius.</div>
+      <div class="card-body"><div class="section-label">Attributes</div><ul class="attr-list"><li><span class="token-name">Id</span><span class="token-type">: Guid</span></li><li><span class="token-name">Description</span><span class="token-type">: string</span></li><li><span class="token-name">Quantity</span><span class="token-type">: decimal</span></li><li><span class="token-name">Unit</span><span class="token-type">: MeasurementUnit</span></li><li><span class="token-name">PreferredLocation</span><span class="token-type">: Point</span></li><li><span class="token-name">RadiusKm</span><span class="token-type">: int</span></li><li><span class="token-name">Status</span><span class="token-type">: RequestStatus</span></li></ul><div class="section-label">Methods</div><ul class="method-list"><li><span class="token-name">Fulfil()</span></li><li><span class="token-name">Close()</span></li></ul></div>
+    </div>
+    <div class="card">
+      <div class="card-header"><span class="card-badge badge-entity">Entity</span><span class="card-title">SavedSearch</span></div>
+      <div class="card-desc">Stored search that notifies the factory when a new listing matches.</div>
+      <div class="card-body"><div class="section-label">Attributes</div><ul class="attr-list"><li><span class="token-name">Id</span><span class="token-type">: Guid</span></li><li><span class="token-name">Keywords</span><span class="token-type">: string</span></li><li><span class="token-name">RadiusKm</span><span class="token-type">: int</span></li><li><span class="token-name">IsActive</span><span class="token-type">: bool</span></li></ul></div>
+    </div>
+    <div class="card">
+      <div class="card-header"><span class="card-badge badge-entity">Entity</span><span class="card-title">Match</span></div>
+      <div class="card-desc">Link between an offer and a request, with the distance between them.</div>
+      <div class="card-body"><div class="section-label">Attributes</div><ul class="attr-list"><li><span class="token-name">Id</span><span class="token-type">: Guid</span></li><li><span class="token-name">DistanceKm</span><span class="token-type">: decimal</span></li></ul></div>
+    </div>
+    <div class="card">
+      <div class="card-header"><span class="card-badge badge-entity">Entity</span><span class="card-title">SampleRequest</span></div>
+      <div class="card-desc">Request for a sample quantity before committing to a deal.</div>
+      <div class="card-body"><div class="section-label">Attributes</div><ul class="attr-list"><li><span class="token-name">Id</span><span class="token-type">: Guid</span></li><li><span class="token-name">Quantity</span><span class="token-type">: decimal</span></li><li><span class="token-name">Status</span><span class="token-type">: SampleStatus</span></li></ul></div>
+    </div>
+    <div class="card">
+      <div class="card-header"><span class="card-badge badge-entity">Entity</span><span class="card-title">Conversation</span></div>
+      <div class="card-desc">Chat thread between two factories about one listing, either an offer or a request.</div>
+      <div class="card-body"><div class="section-label">Attributes</div><ul class="attr-list"><li><span class="token-name">Id</span><span class="token-type">: Guid</span></li><li><span class="token-name">ListingType</span><span class="token-type">: ListingType</span></li><li><span class="token-name">OfferId</span><span class="token-type">: Guid</span></li><li><span class="token-name">RequestId</span><span class="token-type">: Guid</span></li></ul><div class="section-label">Methods</div><ul class="method-list"><li><span class="token-name">Send(senderId, body)</span></li></ul></div>
+    </div>
+    <div class="card">
+      <div class="card-header"><span class="card-badge badge-entity">Entity</span><span class="card-title">Message</span></div>
+      <div class="card-desc">A single chat message.</div>
+      <div class="card-body"><div class="section-label">Attributes</div><ul class="attr-list"><li><span class="token-name">Id</span><span class="token-type">: Guid</span></li><li><span class="token-name">Body</span><span class="token-type">: string</span></li><li><span class="token-name">SentAt</span><span class="token-type">: DateTime</span></li></ul></div>
+    </div>
+    <div class="card">
+      <div class="card-header"><span class="card-badge badge-entity">Entity</span><span class="card-title">Deal</span></div>
+      <div class="card-desc">Agreement to trade a quantity at an agreed unit price. The total is locked on acceptance, then the deal moves through escrow, shipping and inspection.</div>
+      <div class="card-body"><div class="section-label">Attributes</div><ul class="attr-list"><li><span class="token-name">Id</span><span class="token-type">: Guid</span></li><li><span class="token-name">Quantity</span><span class="token-type">: decimal</span></li><li><span class="token-name">Unit</span><span class="token-type">: MeasurementUnit</span></li><li><span class="token-name">AgreedUnitPrice</span><span class="token-type">: decimal</span></li><li><span class="token-name">TotalAmount</span><span class="token-type">: decimal</span></li><li><span class="token-name">DistanceKm</span><span class="token-type">: decimal</span></li><li><span class="token-name">TransportEstimate</span><span class="token-type">: decimal</span></li><li><span class="token-name">Status</span><span class="token-type">: DealStatus</span></li><li><span class="token-name">InspectionDeadline</span><span class="token-type">: DateTime</span></li></ul><div class="section-label">Methods</div><ul class="method-list"><li><span class="token-name">Accept()</span></li><li><span class="token-name">MarkShipped()</span></li><li><span class="token-name">ConfirmDelivery()</span></li><li><span class="token-name">AcceptInspection()</span></li><li><span class="token-name">RaiseDispute(reason)</span></li><li><span class="token-name">Cancel()</span></li></ul></div>
+    </div>
+    <div class="card">
+      <div class="card-header"><span class="card-badge badge-entity">Entity</span><span class="card-title">EscrowPayment</span></div>
+      <div class="card-desc">Funds the platform holds until the buyer accepts delivery.</div>
+      <div class="card-body"><div class="section-label">Attributes</div><ul class="attr-list"><li><span class="token-name">Id</span><span class="token-type">: Guid</span></li><li><span class="token-name">Amount</span><span class="token-type">: decimal</span></li><li><span class="token-name">Status</span><span class="token-type">: EscrowStatus</span></li></ul><div class="section-label">Methods</div><ul class="method-list"><li><span class="token-name">Hold()</span></li><li><span class="token-name">Release()</span></li><li><span class="token-name">Refund()</span></li></ul></div>
+    </div>
+    <div class="card">
+      <div class="card-header"><span class="card-badge badge-entity">Entity</span><span class="card-title">Dispute</span></div>
+      <div class="card-desc">Raised by the buyer during inspection and resolved by an admin.</div>
+      <div class="card-body"><div class="section-label">Attributes</div><ul class="attr-list"><li><span class="token-name">Id</span><span class="token-type">: Guid</span></li><li><span class="token-name">Reason</span><span class="token-type">: string</span></li><li><span class="token-name">Status</span><span class="token-type">: DisputeStatus</span></li></ul><div class="section-label">Methods</div><ul class="method-list"><li><span class="token-name">Resolve(adminId, resolution)</span></li></ul></div>
+    </div>
+    <div class="card">
+      <div class="card-header"><span class="card-badge badge-entity">Entity</span><span class="card-title">ImpactRecord</span></div>
+      <div class="card-desc">CO2 saved and waste diverted by a completed deal. Feeds the reports.</div>
+      <div class="card-body"><div class="section-label">Attributes</div><ul class="attr-list"><li><span class="token-name">Id</span><span class="token-type">: Guid</span></li><li><span class="token-name">Co2SavedKg</span><span class="token-type">: decimal</span></li><li><span class="token-name">WasteDivertedKg</span><span class="token-type">: decimal</span></li></ul></div>
+    </div>
+    <div class="card">
+      <div class="card-header"><span class="card-badge badge-entity">Entity</span><span class="card-title">Notification</span></div>
+      <div class="card-desc">In-app and email alert for a user.</div>
+      <div class="card-body"><div class="section-label">Attributes</div><ul class="attr-list"><li><span class="token-name">Id</span><span class="token-type">: Guid</span></li><li><span class="token-name">Type</span><span class="token-type">: string</span></li><li><span class="token-name">Title</span><span class="token-type">: string</span></li><li><span class="token-name">Body</span><span class="token-type">: string</span></li><li><span class="token-name">IsRead</span><span class="token-type">: bool</span></li></ul><div class="section-label">Methods</div><ul class="method-list"><li><span class="token-name">MarkRead()</span></li></ul></div>
+    </div>
+    <div class="card">
+      <div class="card-header"><span class="card-badge badge-entity">Entity</span><span class="card-title">UserSettings</span></div>
+      <div class="card-desc">Personal alert preferences for one account. Created with default values at registration.</div>
+      <div class="card-body"><div class="section-label">Attributes</div><ul class="attr-list"><li><span class="token-name">EmailAlerts</span><span class="token-type">: bool</span></li><li><span class="token-name">MatchAlerts</span><span class="token-type">: bool</span></li><li><span class="token-name">MessageAlerts</span><span class="token-type">: bool</span></li><li><span class="token-name">DealAlerts</span><span class="token-type">: bool</span></li></ul><div class="section-label">Methods</div><ul class="method-list"><li><span class="token-name">Update(email, match, message, deal)</span></li></ul></div>
+    </div>
+    <div class="card">
+      <div class="card-header"><span class="card-badge badge-entity">Entity</span><span class="card-title">PlatformSetting</span></div>
+      <div class="card-desc">Value an admin can change, which the platform reads instead of hard-coding it, such as the inspection period.</div>
+      <div class="card-body"><div class="section-label">Attributes</div><ul class="attr-list"><li><span class="token-name">SettingKey</span><span class="token-type">: string</span></li><li><span class="token-name">Value</span><span class="token-type">: string</span></li><li><span class="token-name">Description</span><span class="token-type">: string</span></li><li><span class="token-name">UpdatedAt</span><span class="token-type">: DateTime</span></li></ul><div class="section-label">Methods</div><ul class="method-list"><li><span class="token-name">Change(value, adminId)</span></li></ul></div>
+    </div>
+    <div class="card">
+      <div class="card-header"><span class="card-badge badge-entity">Entity</span><span class="card-title">AuditLog</span></div>
+      <div class="card-desc">Append-only record of every change made by users and admins, written in the same transaction as the change. The actor is empty only for system jobs and failed sign-ins.</div>
+      <div class="card-body"><div class="section-label">Attributes</div><ul class="attr-list"><li><span class="token-name">Id</span><span class="token-type">: Guid</span></li><li><span class="token-name">ActorUserId</span><span class="token-type">: Guid</span></li><li><span class="token-name">Action</span><span class="token-type">: string</span></li><li><span class="token-name">EntityType</span><span class="token-type">: string</span></li><li><span class="token-name">EntityId</span><span class="token-type">: Guid</span></li><li><span class="token-name">Details</span><span class="token-type">: string</span></li><li><span class="token-name">IpAddress</span><span class="token-type">: string</span></li><li><span class="token-name">CreatedAt</span><span class="token-type">: DateTime</span></li></ul></div>
+    </div>
+    <div class="card">
+      <div class="card-header"><span class="card-badge badge-enum">Enumeration</span><span class="card-title">UserRole</span></div>
+      <div class="card-desc">Access level of an account.</div>
+      <div class="enum-vals"><span class="pill">User</span><span class="pill">Admin</span></div>
+    </div>
+    <div class="card">
+      <div class="card-header"><span class="card-badge badge-enum">Enumeration</span><span class="card-title">OfferStatus</span></div>
+      <div class="card-desc">Availability of an offer.</div>
+      <div class="enum-vals"><span class="pill">Available</span><span class="pill">Reserved</span><span class="pill">Sold</span><span class="pill">Closed</span></div>
+    </div>
+    <div class="card">
+      <div class="card-header"><span class="card-badge badge-enum">Enumeration</span><span class="card-title">DealStatus</span></div>
+      <div class="card-desc">Stage a deal has reached, from proposal to completion.</div>
+      <div class="enum-vals"><span class="pill">Proposed</span><span class="pill">Accepted</span><span class="pill">EscrowFunded</span><span class="pill">Shipped</span><span class="pill">InInspection</span><span class="pill">Disputed</span><span class="pill">Completed</span><span class="pill">Refunded</span><span class="pill">Cancelled</span></div>
+    </div>
+    <div class="card">
+      <div class="card-header"><span class="card-badge badge-enum">Enumeration</span><span class="card-title">EscrowStatus</span></div>
+      <div class="card-desc">State of the funds held for a deal.</div>
+      <div class="enum-vals"><span class="pill">Pending</span><span class="pill">Held</span><span class="pill">Released</span><span class="pill">Refunded</span></div>
+    </div>
+    <div class="card">
+      <div class="card-header"><span class="card-badge badge-enum">Enumeration</span><span class="card-title">MeasurementUnit</span></div>
+      <div class="card-desc">Unit a quantity and its price are stated in. Kg and Ton are mass, Liter and CubicMeter are volume, Piece is a count.</div>
+      <div class="enum-vals"><span class="pill">Kg</span><span class="pill">Ton</span><span class="pill">Liter</span><span class="pill">CubicMeter</span><span class="pill">Piece</span></div>
+    </div>
+    <div class="card">
+      <div class="card-header"><span class="card-badge badge-enum">Enumeration</span><span class="card-title">ListingType</span></div>
+      <div class="card-desc">Whether a conversation is about an offer or a request.</div>
+      <div class="enum-vals"><span class="pill">Offer</span><span class="pill">Request</span></div>
+    </div></div></div><div class="panel" id="tab-rels" role="tabpanel"><div class="card" style="overflow:auto"><table class="rel-table"><thead><tr><th>From</th><th>Relationship</th><th>To</th><th>Cardinality</th><th>Type</th><th>Label</th></tr></thead><tbody><tr><td>User</td><td class="rel-type rt-assoc">Association --</td><td>FactoryProfile</td><td class="cardinality">1 &rarr; 0..1</td><td>Association</td><td>owns</td></tr><tr><td>User</td><td class="rel-type rt-assoc">Association --</td><td>Notification</td><td class="cardinality">1 &rarr; *</td><td>Association</td><td>receives</td></tr><tr><td>User</td><td class="rel-type rt-assoc">Association --</td><td>UserSettings</td><td class="cardinality">1 &rarr; 0..1</td><td>Association</td><td>has</td></tr><tr><td>User</td><td class="rel-type rt-assoc">Association --</td><td>AuditLog</td><td class="cardinality">1 &rarr; *</td><td>Association</td><td>performs</td></tr><tr><td>User</td><td class="rel-type rt-assoc">Association --</td><td>PlatformSetting</td><td class="cardinality">1 &rarr; *</td><td>Association</td><td>updates</td></tr><tr><td>FactoryProfile</td><td class="rel-type rt-assoc">Association --</td><td>VerificationDocument</td><td class="cardinality">1 &rarr; *</td><td>Association</td><td>submits</td></tr><tr><td>FactoryProfile</td><td class="rel-type rt-assoc">Association --</td><td>Offer</td><td class="cardinality">1 &rarr; *</td><td>Association</td><td>posts</td></tr><tr><td>FactoryProfile</td><td class="rel-type rt-assoc">Association --</td><td>Request</td><td class="cardinality">1 &rarr; *</td><td>Association</td><td>posts</td></tr><tr><td>FactoryProfile</td><td class="rel-type rt-assoc">Association --</td><td>SavedSearch</td><td class="cardinality">1 &rarr; *</td><td>Association</td><td>saves</td></tr><tr><td>MaterialCategory</td><td class="rel-type rt-assoc">Association --</td><td>Offer</td><td class="cardinality">1 &rarr; *</td><td>Association</td><td>classifies</td></tr><tr><td>MaterialCategory</td><td class="rel-type rt-assoc">Association --</td><td>Request</td><td class="cardinality">1 &rarr; *</td><td>Association</td><td>classifies</td></tr><tr><td>Offer</td><td class="rel-type rt-compose">Composition *--</td><td>OfferImage</td><td class="cardinality">1 &rarr; *</td><td>Composition</td><td>has</td></tr><tr><td>Offer</td><td class="rel-type rt-assoc">Association --</td><td>Match</td><td class="cardinality">1 &rarr; *</td><td>Association</td><td>matched in</td></tr><tr><td>Request</td><td class="rel-type rt-assoc">Association --</td><td>Match</td><td class="cardinality">1 &rarr; *</td><td>Association</td><td>matched in</td></tr><tr><td>Offer</td><td class="rel-type rt-assoc">Association --</td><td>SampleRequest</td><td class="cardinality">1 &rarr; *</td><td>Association</td><td>receives</td></tr><tr><td>Offer</td><td class="rel-type rt-assoc">Association --</td><td>Conversation</td><td class="cardinality">1 &rarr; *</td><td>Association</td><td>discussed in</td></tr><tr><td>Request</td><td class="rel-type rt-assoc">Association --</td><td>Conversation</td><td class="cardinality">1 &rarr; *</td><td>Association</td><td>discussed in</td></tr><tr><td>Conversation</td><td class="rel-type rt-compose">Composition *--</td><td>Message</td><td class="cardinality">1 &rarr; *</td><td>Composition</td><td>contains</td></tr><tr><td>Offer</td><td class="rel-type rt-assoc">Association --</td><td>Deal</td><td class="cardinality">1 &rarr; *</td><td>Association</td><td>sold through</td></tr><tr><td>Deal</td><td class="rel-type rt-compose">Composition *--</td><td>EscrowPayment</td><td class="cardinality">1 &rarr; 1</td><td>Composition</td><td>secured by</td></tr><tr><td>Deal</td><td class="rel-type rt-dep">Aggregation o--</td><td>Dispute</td><td class="cardinality">1 &rarr; 0..1</td><td>Aggregation</td><td>may have</td></tr><tr><td>Deal</td><td class="rel-type rt-assoc">Association --</td><td>ImpactRecord</td><td class="cardinality">1 &rarr; 0..1</td><td>Association</td><td>produces</td></tr><tr><td>FactoryProfile</td><td class="rel-type rt-assoc">Association --</td><td>Deal</td><td class="cardinality">1 &rarr; *</td><td>Association</td><td>seller</td></tr><tr><td>FactoryProfile</td><td class="rel-type rt-assoc">Association --</td><td>Deal</td><td class="cardinality">1 &rarr; *</td><td>Association</td><td>buyer</td></tr></tbody></table></div></div>
+
+
+<footer class="copyright-notice" aria-label="Copyright and intellectual property notice">
+  <strong>Copyright © 2026 Ali Ahmed Abdullah Sakr. All rights reserved.</strong><br>
+  Badil's original concept, solution design, diagrams, and original materials are claimed as the intellectual property of Ali Ahmed Abdullah Sakr, to the extent protected by applicable law.
+</footer>
+
+<script>
+  mermaid.initialize({
+    startOnLoad: false,
+    theme: 'dark',
+    securityLevel: 'loose',
+    themeVariables: { primaryColor: '#22263a', primaryTextColor: '#e8eaf0', primaryBorderColor: '#6c63ff', lineColor: '#6c63ff', secondaryColor: '#1a1d27', tertiaryColor: '#0f1117', fontSize: '13px' },
+    flowchart: { useMaxWidth: false, nodeSpacing: 40, rankSpacing: 50, padding: 12 },
+    class: { useMaxWidth: false },
+    er: { useMaxWidth: false },
+    sequence: { useMaxWidth: false },
+    state: { useMaxWidth: false }
+  });
+
+  const zoom = {};
+  function applyZoom(block) {
+    const svg = block.querySelector('.dg-canvas svg');
+    if (!svg) return;
+    const z = zoom[block.dataset.key] || 1;
+    svg.style.maxWidth = 'none';
+    svg.style.width = (z * 100) + '%';
+  }
+
+  async function renderBlock(block) {
+    if (block.dataset.done) return;
+    block.dataset.done = '1';
+    const code = document.getElementById(block.dataset.src).textContent;
+    const canvas = block.querySelector('.dg-canvas');
+    try {
+      const { svg } = await mermaid.render('mmd-' + block.dataset.key, code);
+      canvas.innerHTML = svg;
+      applyZoom(block);
+    } catch (e) {
+      canvas.innerHTML = '<p class="dg-error">This diagram could not be rendered.\n' + String(e.message || e).replace(/</g, '&lt;') + '</p>';
+    }
+  }
+
+  function showTab(id) {
+    document.querySelectorAll('.tab').forEach(t => {
+      const on = t.dataset.tab === id;
+      t.classList.toggle('active', on);
+      t.setAttribute('aria-selected', on ? 'true' : 'false');
+    });
+    document.querySelectorAll('.panel').forEach(p => p.classList.toggle('active', p.id === 'tab-' + id));
+    document.querySelectorAll('#tab-' + id + ' .dg').forEach(renderBlock);
+    history.replaceState(null, '', '#' + id);
+  }
+
+  document.querySelector('.tabs').addEventListener('click', e => {
+    const t = e.target.closest('.tab');
+    if (t) showTab(t.dataset.tab);
+  });
+
+  document.addEventListener('click', async e => {
+    const b = e.target.closest('.dg-bar button');
+    if (!b) return;
+    const block = b.closest('.dg');
+    const key = block.dataset.key;
+    const act = b.dataset.act;
+    if (act === 'zoom-in')  zoom[key] = Math.min((zoom[key] || 1) + 0.25, 4);
+    if (act === 'zoom-out') zoom[key] = Math.max((zoom[key] || 1) - 0.25, 0.5);
+    if (act === 'fit')      zoom[key] = 1;
+    if (act === 'copy') {
+      const code = document.getElementById(block.dataset.src).textContent;
+      try { await navigator.clipboard.writeText(code); b.textContent = 'Copied'; }
+      catch (_) {
+        const ta = document.createElement('textarea'); ta.value = code; document.body.appendChild(ta); ta.select();
+        try { document.execCommand('copy'); b.textContent = 'Copied'; } catch (__) { b.textContent = 'Copy failed'; }
+        ta.remove();
+      }
+      setTimeout(() => { b.textContent = 'Copy Mermaid code'; }, 1500);
+      return;
+    }
+    applyZoom(block);
+  });
+
+  const start = location.hash.slice(1);
+  showTab(document.querySelector('.tab[data-tab="' + start + '"]') ? start : 'start');
+</script>
+</body>
+</html>
